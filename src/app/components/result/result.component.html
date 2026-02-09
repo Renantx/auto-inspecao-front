@@ -1,0 +1,173 @@
+<div class="result-container" *ngIf="form && result">
+  <header class="result-header">
+    <div class="header-content">
+      <h1>
+        <span class="pharmacy-symbol" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </span>
+        Resultado da Auto-Inspeção
+      </h1>
+      <p class="subtitle">{{ form.farmaciaNome }}</p>
+    </div>
+  </header>
+
+  <div class="result-content">
+    <!-- Informações da Farmácia -->
+    <section class="pharmacy-info">
+      <h2>Informações da Farmácia</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Nome:</span>
+          <span class="info-value">{{ form.farmaciaNome }}</span>
+        </div>
+        <div class="info-item" *ngIf="form.farmaciaCNPJ">
+          <span class="info-label">CNPJ:</span>
+          <span class="info-value">{{ form.farmaciaCNPJ }}</span>
+        </div>
+        <div class="info-item" *ngIf="form.responsavelTecnico">
+          <span class="info-label">Responsável Técnico:</span>
+          <span class="info-value">{{ form.responsavelTecnico }}</span>
+        </div>
+        <div class="info-item" *ngIf="form.crf">
+          <span class="info-label">CRF/UF:</span>
+          <span class="info-value">{{ form.crf }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Data da Inspeção:</span>
+          <span class="info-value">{{ form.dataInspecao | date:'dd/MM/yyyy' }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nota Principal -->
+    <section class="score-section">
+      <div class="score-card" [style.border-color]="getGradeColor()">
+        <div class="score-icon">{{ getGradeIcon() }}</div>
+        <div class="score-grade" [style.color]="getGradeColor()">
+          {{ result.grade }}
+        </div>
+        <div class="score-percentage">
+          {{ result.percentage | number:'1.1-1' }}%
+        </div>
+        <div class="score-details">
+          <span>{{ result.totalScore }} pontos de {{ result.maxScore }} possíveis</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Erros Fatais e Sugestões -->
+    <section class="fatal-errors-section" *ngIf="hasFatalErrors()">
+      <div class="alert-box fatal">
+        <div class="alert-header">
+          <span class="alert-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></span>
+          <h3>Erros Fatais Encontrados</h3>
+        </div>
+        <p class="alert-message">
+          Foram identificados {{ result.fatalErrors.length }} erro(s) fatal(is) que precisam ser corrigidos imediatamente.
+        </p>
+        
+        <div class="suggestions-box">
+          <h4>Sugestões de Correção:</h4>
+          <ul class="suggestions-list">
+            <li *ngFor="let suggestion of result.suggestions">
+              {{ suggestion }}
+            </li>
+          </ul>
+        </div>
+
+        <div class="fatal-questions-list">
+          <h4>Questões com Erros Fatais:</h4>
+          <div class="fatal-question-item" *ngFor="let error of result.fatalErrors">
+            <span class="question-id">{{ error.id }}</span>
+            <span class="question-text">{{ error.text }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pontuação por Categoria -->
+    <section class="category-scores-section">
+      <h2>Pontuação por Categoria</h2>
+      <div class="category-scores-grid">
+        <div class="category-score-card" *ngFor="let categoryScore of result.categoryScores">
+          <div class="category-name">{{ categoryScore.category }}</div>
+          <div class="category-percentage">
+            <div class="percentage-bar">
+              <div 
+                class="percentage-fill" 
+                [style.width.%]="categoryScore.percentage"
+                [style.background-color]="getCategoryColor(categoryScore.percentage)"
+              ></div>
+            </div>
+            <span class="percentage-value">{{ categoryScore.percentage | number:'1.1-1' }}%</span>
+          </div>
+          <div class="category-details">
+            {{ categoryScore.score }} / {{ categoryScore.maxScore }} pontos
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Assinatura do Farmacêutico -->
+    <section class="signature-section">
+      <h2>Assinatura do Responsável Técnico</h2>
+      <div class="signature-box" *ngIf="form">
+        <div *ngIf="!temAssinatura() || assinaturaEditando" class="signature-pad-wrapper">
+          <p class="signature-instruction">Desenhe sua assinatura no quadro abaixo (mouse ou toque):</p>
+          <div class="canvas-wrapper">
+            <canvas
+              #signatureCanvas
+              class="signature-canvas"
+              (mousedown)="onSignaturePointerDown($event)"
+              (mousemove)="onSignaturePointerMove($event)"
+              (mouseup)="onSignaturePointerUp($event)"
+              (mouseleave)="onSignaturePointerUp($event)"
+              (touchstart)="onSignaturePointerDown($event)"
+              (touchmove)="onSignaturePointerMove($event)"
+              (touchend)="onSignaturePointerUp($event)"
+            ></canvas>
+          </div>
+          <div class="signature-actions">
+            <button type="button" class="action-btn secondary" (click)="limparAssinatura()">Limpar</button>
+            <button type="button" class="action-btn primary" (click)="confirmarAssinatura()">Confirmar assinatura</button>
+          </div>
+        </div>
+        <div *ngIf="temAssinatura() && !assinaturaEditando" class="signature-display">
+          <div class="signature-image-wrapper">
+            <img [src]="form.assinaturaDataUrl" alt="Assinatura" class="signature-image" />
+          </div>
+          <div class="signature-info">
+            <span class="signature-name" *ngIf="form.responsavelTecnico">{{ form.responsavelTecnico }}</span>
+            <span class="signature-crf" *ngIf="form.crf">CRF/UF: {{ form.crf }}</span>
+            <span class="signature-date">{{ dataAssinaturaFormatada() }}</span>
+          </div>
+          <button type="button" class="action-btn secondary refazer-btn" (click)="refazerAssinatura()">Refazer assinatura</button>
+        </div>
+        <div *ngIf="!temAssinatura() && !assinaturaEditando" class="signature-prompt">
+          <button type="button" class="action-btn primary" (click)="iniciarAssinatura()">
+            Assinar auto-inspeção
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ações -->
+    <section class="actions-section">
+      <button class="action-btn primary" (click)="newInspection()">
+        <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></span>
+        Nova Inspeção
+      </button>
+      <button class="action-btn secondary" (click)="printReport()">
+        <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></span>
+        Imprimir Relatório
+      </button>
+    </section>
+  </div>
+</div>
+
+<div class="no-result" *ngIf="!form || !result">
+  <p>Nenhum resultado encontrado.</p>
+  <button class="action-btn primary" (click)="newInspection()">
+    Iniciar Nova Inspeção
+  </button>
+</div>

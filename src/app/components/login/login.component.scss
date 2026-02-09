@@ -1,0 +1,244 @@
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, var(--pharmacy-bg) 0%, #bbdefb 50%, #e3f2fd 100%);
+  padding: 2rem 1rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--pharmacy-bg-card);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px var(--pharmacy-shadow);
+  overflow: hidden;
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-header {
+  background: linear-gradient(135deg, var(--pharmacy-primary) 0%, var(--pharmacy-primary-dark) 100%);
+  color: white;
+  padding: 2.5rem 2rem;
+  text-align: center;
+
+  .pharmacy-symbol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: 1rem;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    backdrop-filter: blur(10px);
+
+    svg {
+      width: 2rem;
+      height: 2rem;
+    }
+  }
+
+  h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .subtitle {
+    margin: 0;
+    font-size: 0.95rem;
+    opacity: 0.9;
+    font-weight: 400;
+  }
+}
+
+.login-form {
+  padding: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    color: var(--pharmacy-text);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+
+    .label-icon {
+      display: inline-flex;
+      align-items: center;
+      width: 1.25rem;
+      height: 1.25rem;
+      color: var(--pharmacy-primary);
+
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    border: 2px solid var(--pharmacy-border);
+    border-radius: 8px;
+    background: white;
+    color: var(--pharmacy-text);
+    transition: all 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--pharmacy-primary);
+      box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.1);
+    }
+
+    &::placeholder {
+      color: var(--pharmacy-text-muted);
+      opacity: 0.6;
+    }
+
+    &.error {
+      border-color: var(--pharmacy-fatal);
+    }
+  }
+
+  .error-message {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--pharmacy-fatal);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 1.25rem;
+  }
+}
+
+.server-error {
+  background: #ffebee;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border-left: 4px solid var(--pharmacy-fatal);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.btn-login {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, var(--pharmacy-primary) 0%, var(--pharmacy-primary-dark) 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px var(--pharmacy-shadow);
+  margin-top: 0.5rem;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px var(--pharmacy-shadow-hover);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+
+    .spinner {
+      width: 1.25rem;
+      height: 1.25rem;
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+.forgot-password-link {
+  margin-top: 1rem;
+  text-align: center;
+
+  a {
+    color: var(--pharmacy-primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: var(--pharmacy-primary-dark);
+      text-decoration: underline;
+    }
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.login-footer {
+  padding: 1.5rem 2rem;
+  text-align: center;
+  background: #f5f5f5;
+  border-top: 1px solid var(--pharmacy-border);
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--pharmacy-text-muted);
+  }
+}
+
+// Responsividade
+@media (max-width: 480px) {
+  .login-card {
+    border-radius: 12px;
+  }
+
+  .login-header {
+    padding: 2rem 1.5rem;
+
+    h1 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .login-form {
+    padding: 1.5rem;
+  }
+}

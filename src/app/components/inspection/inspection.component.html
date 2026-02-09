@@ -1,0 +1,178 @@
+<div class="inspection-container">
+  <header class="inspection-header">
+    <div class="header-content">
+      <h1>
+        <span class="pharmacy-symbol" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/>
+            <rect x="6" y="6" width="12" height="12" rx="2" stroke-width="1.5"/>
+          </svg>
+        </span>
+        Auto-Inspeção - Farmácia de Manipulação
+      </h1>
+      <p class="subtitle">Roteiro de Inspeção conforme RDC 67/2007 - ANVISA</p>
+    </div>
+  </header>
+
+  <div class="inspection-content">
+    <!-- Informações da Farmácia -->
+    <section class="pharmacy-info-section">
+      <h2><span class="section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="3"/></svg></span>Informações da Farmácia</h2>
+      <div class="form-group">
+        <label for="farmaciaNome">
+          <span class="required">*</span> Nome da Farmácia
+        </label>
+        <input
+          type="text"
+          id="farmaciaNome"
+          [(ngModel)]="form.farmaciaNome"
+          placeholder="Digite o nome da farmácia"
+          class="form-control"
+        />
+      </div>
+      <div class="form-row">
+        <div class="form-group cnpj-group">
+          <label for="farmaciaCNPJ">CNPJ</label>
+          <div class="cnpj-input-wrapper">
+            <input
+              type="text"
+              id="farmaciaCNPJ"
+              [(ngModel)]="form.farmaciaCNPJ"
+              (blur)="buscarRazaoSocialPorCnpj()"
+              placeholder="00.000.000/0000-00"
+              class="form-control"
+              maxlength="18"
+            />
+            <span class="cnpj-loading" *ngIf="cnpjLoading">Buscando...</span>
+          </div>
+          <p class="cnpj-message success" *ngIf="cnpjMessage && cnpjSuccess">{{ cnpjMessage }}</p>
+          <p class="cnpj-message error" *ngIf="cnpjMessage && !cnpjSuccess && !cnpjLoading">{{ cnpjMessage }}</p>
+        </div>
+        <div class="form-group">
+          <label for="responsavelTecnico">Responsável Técnico</label>
+          <input
+            type="text"
+            id="responsavelTecnico"
+            [(ngModel)]="form.responsavelTecnico"
+            placeholder="Nome do responsável técnico"
+            class="form-control"
+          />
+        </div>
+        <div class="form-group">
+          <label for="crf">CRF/UF</label>
+          <input
+            type="text"
+            id="crf"
+            [(ngModel)]="form.crf"
+            placeholder="CRF/UF"
+            class="form-control"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- Progresso -->
+    <section class="progress-section">
+      <div class="progress-info">
+        <span class="progress-text">
+          Progresso: {{ getAnsweredCount() }} de {{ getTotalQuestionsCount() }} questões respondidas
+        </span>
+        <span class="progress-percentage">{{ getProgressPercentage() | number:'1.0-0' }}%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+      </div>
+    </section>
+
+    <!-- Navegação por Categorias -->
+    <section class="categories-section">
+      <h2><span class="section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>Categorias de Inspeção</h2>
+      <div class="categories-nav">
+        <button
+          *ngFor="let category of categories"
+          [class.active]="currentCategory === category.value"
+          (click)="selectCategory(category.value)"
+          class="category-btn"
+        >
+          {{ category.label }}
+        </button>
+      </div>
+    </section>
+
+    <!-- Questões da Categoria Atual -->
+    <section class="questions-section" *ngIf="currentCategory">
+      <h3>{{ getCategoryLabel(currentCategory) }}</h3>
+      
+      <div class="questions-list">
+        <div *ngFor="let question of getCurrentCategoryQuestions()" class="question-card">
+          <div class="question-header">
+            <span class="question-id">{{ question.id }}</span>
+            <span class="question-type fatal-badge" [class.fatal]="question.isFatal">
+              <svg *ngIf="question.isFatal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/><path d="M12 13h.01"/></svg>
+              {{ question.isFatal ? 'CRÍTICO' : '' }}
+            </span>
+          </div>
+          
+          <p class="question-text">{{ question.text }}</p>
+          
+          <div class="question-answer">
+            <!-- Questões SIM/NÃO, R, I, N -->
+            <div *ngIf="question.type === 'SIM_NAO' || question.type === 'R' || question.type === 'I' || question.type === 'N'"
+                 class="yes-no-options">
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  [name]="'q_' + question.id"
+                  [value]="true"
+                  [checked]="question.answer === true"
+                  (change)="updateAnswer(question.id, true)"
+                />
+                <span>Sim</span>
+              </label>
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  [name]="'q_' + question.id"
+                  [value]="false"
+                  [checked]="question.answer === false"
+                  (change)="updateAnswer(question.id, false)"
+                />
+                <span>Não</span>
+              </label>
+            </div>
+            
+            <!-- Questões Informativas (INF) -->
+            <div *ngIf="question.type === 'INF'" class="text-input">
+              <input
+                type="text"
+                [value]="question.answer || ''"
+                (input)="updateAnswer(question.id, $any($event.target).value)"
+                [placeholder]="question.id.startsWith('1.') ? 'Digite a informação solicitada' : 'Digite sua resposta'"
+                class="form-control"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Botão Finalizar -->
+    <section class="finish-section">
+      <button
+        class="finish-btn"
+        [class.disabled]="!canFinish()"
+        [disabled]="!canFinish()"
+        (click)="finishInspection()"
+      >
+        <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+        Finalizar Auto-Inspeção
+      </button>
+      <p class="finish-hint" *ngIf="!canFinish()">
+        Informe o nome da farmácia para poder finalizar. Você pode finalizar a qualquer momento; itens não preenchidos (ex.: homeopatia, controlados) não entram na pontuação.
+      </p>
+      <p class="finish-hint optional-note" *ngIf="canFinish() && getAnsweredCount() < getTotalQuestionsCount()">
+        Itens não respondidos não serão considerados na pontuação (adequado quando a farmácia não utiliza homeopatia, controlados, estoque mínimo, etc.).
+      </p>
+    </section>
+  </div>
+</div>
