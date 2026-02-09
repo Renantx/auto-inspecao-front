@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { InspectionForm } from '../../models/question.model';
 import { ScoringService, ScoreResult } from '../../services/scoring.service';
+import { InspectionService } from '../../services/inspection.service';
 
 @Component({
   selector: 'app-result',
@@ -14,6 +15,8 @@ export class ResultComponent implements OnInit {
   form: InspectionForm | null = null;
   result: ScoreResult | null = null;
   assinaturaEditando = false;
+  saving = false;
+  saveMessage: string | null = null;
   private canvasContext: CanvasRenderingContext2D | null = null;
   private desenhando = false;
   private lastX = 0;
@@ -21,6 +24,7 @@ export class ResultComponent implements OnInit {
 
   constructor(
     private scoringService: ScoringService,
+    private inspectionService: InspectionService,
     private router: Router
   ) {}
 
@@ -167,9 +171,46 @@ export class ResultComponent implements OnInit {
     this.form.assinaturaDataUrl = dataUrl;
     this.form.dataAssinatura = new Date().toISOString();
     this.assinaturaEditando = false;
+    
+    // Salva no localStorage
     try {
       localStorage.setItem('inspectionForm', JSON.stringify(this.form));
     } catch (_) {}
+    
+    // Salva no backend
+    this.saveInspection();
+  }
+
+  private saveInspection(): void {
+    if (!this.form) return;
+
+    this.saving = true;
+    this.saveMessage = null;
+
+    this.inspectionService.saveInspection(this.form).subscribe({
+      next: (result) => {
+        this.saving = false;
+        if (result.success) {
+          this.saveMessage = 'Inspeção salva com sucesso!';
+          console.log('✅ Inspeção salva com sucesso:', result.data);
+          // Mantém o ID da inspeção no formulário se retornado
+          if (result.data?.inspecao_id) {
+            (this.form as any).inspecaoId = result.data.inspecao_id;
+            localStorage.setItem('inspectionForm', JSON.stringify(this.form));
+          }
+          setTimeout(() => {
+            this.saveMessage = null;
+          }, 3000);
+        } else {
+          this.saveMessage = result.message || 'Erro ao salvar inspeção';
+        }
+      },
+      error: (error) => {
+        this.saving = false;
+        console.error('Erro ao salvar inspeção:', error);
+        this.saveMessage = 'Erro ao salvar no servidor. Os dados foram salvos localmente.';
+      }
+    });
   }
 
   refazerAssinatura(): void {

@@ -128,8 +128,11 @@
             ></canvas>
           </div>
           <div class="signature-actions">
-            <button type="button" class="action-btn secondary" (click)="limparAssinatura()">Limpar</button>
-            <button type="button" class="action-btn primary" (click)="confirmarAssinatura()">Confirmar assinatura</button>
+            <button type="button" class="action-btn secondary" (click)="limparAssinatura()" [disabled]="saving">Limpar</button>
+            <button type="button" class="action-btn primary" (click)="confirmarAssinatura()" [disabled]="saving">
+              <span *ngIf="!saving">Confirmar assinatura</span>
+              <span *ngIf="saving">Salvando...</span>
+            </button>
           </div>
         </div>
         <div *ngIf="temAssinatura() && !assinaturaEditando" class="signature-display">
@@ -141,7 +144,10 @@
             <span class="signature-crf" *ngIf="form.crf">CRF/UF: {{ form.crf }}</span>
             <span class="signature-date">{{ dataAssinaturaFormatada() }}</span>
           </div>
-          <button type="button" class="action-btn secondary refazer-btn" (click)="refazerAssinatura()">Refazer assinatura</button>
+          <div class="save-message" *ngIf="saveMessage" [class.error]="saveMessage.includes('Erro')" [class.success]="saveMessage.includes('sucesso')">
+            {{ saveMessage }}
+          </div>
+          <button type="button" class="action-btn secondary refazer-btn" (click)="refazerAssinatura()" [disabled]="saving">Refazer assinatura</button>
         </div>
         <div *ngIf="!temAssinatura() && !assinaturaEditando" class="signature-prompt">
           <button type="button" class="action-btn primary" (click)="iniciarAssinatura()">

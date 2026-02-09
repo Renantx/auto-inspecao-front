@@ -160,17 +160,33 @@
     <section class="finish-section">
       <button
         class="finish-btn"
-        [class.disabled]="!canFinish()"
-        [disabled]="!canFinish()"
+        [class.disabled]="!canFinish() || saving"
+        [disabled]="!canFinish() || saving"
         (click)="finishInspection()"
       >
-        <span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
-        Finalizar Auto-Inspeção
+        <span class="btn-icon" *ngIf="!saving">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </span>
+        <span class="btn-icon" *ngIf="saving">
+          <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span *ngIf="!saving">Finalizar Auto-Inspeção</span>
+        <span *ngIf="saving">Salvando...</span>
       </button>
+      
+      <div class="save-message" *ngIf="saveMessage" [class.error]="saveMessage.includes('Erro')">
+        {{ saveMessage }}
+      </div>
+      
       <p class="finish-hint" *ngIf="!canFinish()">
         Informe o nome da farmácia para poder finalizar. Você pode finalizar a qualquer momento; itens não preenchidos (ex.: homeopatia, controlados) não entram na pontuação.
       </p>
-      <p class="finish-hint optional-note" *ngIf="canFinish() && getAnsweredCount() < getTotalQuestionsCount()">
+      <p class="finish-hint optional-note" *ngIf="canFinish() && getAnsweredCount() < getTotalQuestionsCount() && !saving">
         Itens não respondidos não serão considerados na pontuação (adequado quando a farmácia não utiliza homeopatia, controlados, estoque mínimo, etc.).
       </p>
     </section>

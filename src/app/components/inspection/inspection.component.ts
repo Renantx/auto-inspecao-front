@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { InspectionDataService } from '../../services/inspection-data.service';
+import { InspectionService } from '../../services/inspection.service';
 import { CnpjService } from '../../services/cnpj.service';
 import { InspectionForm, Question, QuestionCategory } from '../../models/question.model';
 
@@ -15,6 +16,8 @@ export class InspectionComponent implements OnInit {
   cnpjLoading = false;
   cnpjMessage: string | null = null;
   cnpjSuccess = false;
+  saving = false;
+  saveMessage: string | null = null;
   categories: { value: QuestionCategory; label: string }[] = [
     { value: QuestionCategory.IDENTIFICACAO, label: 'Identificação da Farmácia' },
     { value: QuestionCategory.CONDICOES_GERAIS, label: 'Condições Gerais' },
@@ -40,6 +43,7 @@ export class InspectionComponent implements OnInit {
 
   constructor(
     private inspectionDataService: InspectionDataService,
+    private inspectionService: InspectionService,
     private cnpjService: CnpjService,
     private router: Router
   ) {
@@ -117,9 +121,46 @@ export class InspectionComponent implements OnInit {
   }
 
   finishInspection(): void {
-    // Salvar no localStorage
+    if (!this.canFinish()) {
+      return;
+    }
+
+    this.saving = true;
+    this.saveMessage = null;
+
+    // Salva no localStorage primeiro (backup)
     localStorage.setItem('inspectionForm', JSON.stringify(this.form));
-    this.router.navigate(['/resultado']);
+
+    // Salva no backend
+    this.inspectionService.saveInspection(this.form).subscribe({
+      next: (result) => {
+        this.saving = false;
+        if (result.success) {
+          console.log('✅ Inspeção salva com sucesso no backend');
+          // Mantém o ID da inspeção no formulário se retornado
+          if (result.data?.inspecao_id) {
+            (this.form as any).inspecaoId = result.data.inspecao_id;
+            localStorage.setItem('inspectionForm', JSON.stringify(this.form));
+          }
+          this.router.navigate(['/resultado']);
+        } else {
+          this.saveMessage = result.message || 'Erro ao salvar inspeção';
+          // Mesmo com erro, permite continuar para ver o resultado
+          setTimeout(() => {
+            this.router.navigate(['/resultado']);
+          }, 2000);
+        }
+      },
+      error: (error) => {
+        this.saving = false;
+        console.error('Erro ao salvar inspeção:', error);
+        this.saveMessage = 'Erro ao salvar no servidor. Continuando com salvamento local...';
+        // Mesmo com erro, permite continuar para ver o resultado
+        setTimeout(() => {
+          this.router.navigate(['/resultado']);
+        }, 2000);
+      }
+    });
   }
 
   updateAnswer(questionId: string, answer: boolean | string): void {
